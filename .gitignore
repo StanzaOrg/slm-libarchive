@@ -1,0 +1,6 @@
+build/
+venv/
+.conan2/
+.conan2.cache/
+.slm/
+libarchive_test

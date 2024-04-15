@@ -1,0 +1,31 @@
+
+name = "slm-libarchive"
+version = "0.0.1"
+
+[dependencies]
+
+[dependencies.libarchive]
+pkg="libarchive"
+version="3.7.3"
+type="conan"
+options.shared = "False"
+options.with_acl = "True"
+options.with_bzip2 = "False"
+options.with_cng = "False"
+options.with_expat = "False"
+options.with_iconv = "True"
+options.with_libb2 = "False"
+options.with_libxml2 = "False"
+options.with_lz4 = "False"
+options.with_lzma = "False"
+options.with_lzo = "False"
+options.with_mbedtls = "False"
+options.with_nettle = "False"
+options.with_openssl = "False"
+options.with_pcre2 = "False"
+options.with_pcreposix = "False"
+options.with_xattr = "False"
+options.with_zlib = "True"
+options.with_zstd = "False"
+options.linux.fPIC = "True"
+options.macos.fPIC = "True"

@@ -1,0 +1,27 @@
+include? ".slm/stanza.proj"
+pkg-cache: ".slm/pkg-cache"
+
+package libarchive defined-in "src/libarchive.stanza"
+packages libarchive/* defined-in "src/libarchive"
+
+;;; TODO
+;package libarchive requires :
+;  ccfiles: "src/libarchive.c"
+;  ccflags:
+;    on-platform:
+;      linux: ()
+;      os-x: ()
+;      windows: ()
+
+build main :
+  inputs:
+    libarchive
+  pkg: ".slm/pkgs"
+  s: "main.s"
+  o: "main"
+
+build-test test :
+  inputs:
+    libarchive/tests
+  pkg: ".slm/test-pkgs"
+  o: "libarchive_tests"
