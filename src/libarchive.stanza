@@ -1,0 +1,148 @@
+defpackage libarchive :
+  import core
+  import collections
+
+;==============================================
+;================= C Externs ==================
+;==============================================
+;; struct archive;
+;; FIXME does this need  "<: Resource" ?
+lostanza deftype LIBARCHIVE :
+  la-ptr: ptr<?>
+
+;; struct archive_entry;
+;; FIXME does this need  "<: Resource" ?
+lostanza deftype LIBARCHIVE_ENTRY :
+  lae-ptr: ptr<?>
+
+;; const char *archive_error_string(struct archive *);
+extern archive_error_string : (ptr<LIBARCHIVE>) -> ptr<byte>
+
+;; Int archive_read_close(struct archive *);
+extern archive_read_close : (ptr<LIBARCHIVE>) -> int
+
+;; int archive_read_data_block(struct archive *a,
+;;           const void **buff, size_t *size, la_int64_t *offset);
+;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
+extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, int, int) -> int
+
+;; int archive_read_free(struct archive *);
+extern archive_read_free : (ptr<LIBARCHIVE>) -> int
+
+;; struct archive *archive_read_new(void);
+extern archive_read_new : () -> ptr<LIBARCHIVE>
+
+;; int archive_read_next_header(struct archive *, struct archive_entry **);
+extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> int
+
+;; int archive_read_open_filename(struct archive *,
+;;            const char *_filename, size_t _block_size);
+;; FIXME: is size_t an "int"?
+extern archive_read_open_filename : (ptr<LIBARCHIVE>, ptr<byte>, int) -> int
+
+;; int archive_read_support_compression_gzip(struct archive *);
+extern archive_read_support_compression_gzip : (ptr<LIBARCHIVE>) -> int
+
+;; int archive_read_support_format_tar(struct archive *);
+extern archive_read_support_format_tar : (ptr<LIBARCHIVE>) -> int
+
+;; int archive_write_close(struct archive *);
+extern archive_write_close : (ptr<LIBARCHIVE>) -> int
+
+;; la_ssize_t archive_write_data_block(struct archive *,
+;;                       const void *, size_t, la_int64_t);
+;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
+extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, int, int) -> int
+
+;; struct archive *archive_write_disk_new(void);
+extern archive_write_disk_new : () -> ptr<LIBARCHIVE>
+
+;; int archive_write_disk_set_options(struct archive *, int flags);
+extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, int) -> int
+
+;; int archive_write_finish_entry(struct archive *);
+extern archive_write_finish_entry : (ptr<LIBARCHIVE>) -> int
+
+;; int archive_write_free(struct archive *);
+extern archive_write_free : (ptr<LIBARCHIVE>) -> int
+
+;; int archive_write_header(struct archive *, struct archive_entry *);
+extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> int
+
+
+;Constants
+#for (V in [ARCHIVE_VERSION_NUMBER
+            ARCHIVE_VERSION_ONLY_STRING
+            ARCHIVE_VERSION_STRING
+            ARCHIVE_EOF
+            ARCHIVE_OK
+            ARCHIVE_RETRY
+            ARCHIVE_WARN
+            ARCHIVE_FAILED
+            ARCHIVE_FATAL]
+      get_V in [get_ARCHIVE_VERSION_NUMBER
+            get_ARCHIVE_VERSION_ONLY_STRING
+            get_ARCHIVE_VERSION_STRING
+            get_ARCHIVE_EOF
+            get_ARCHIVE_OK
+            get_ARCHIVE_RETRY
+            get_ARCHIVE_WARN
+            get_ARCHIVE_FAILED
+            get_ARCHIVE_FATAL
+            ]):
+  extern get_V: () -> long
+  public lostanza val V:ref<Long> = new Long{call-c get_V()}
+
+;============================================================
+;======================= Wrappers ===========================
+;============================================================
+public lostanza defn libarchive_error_string (p:ref<LIBARCHIVE>) -> ref<String> :
+  return String(call-c archive_error_string(p.la-ptr))
+
+public lostanza defn libarchive_read_close (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_close(p.la-ptr)}
+
+;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
+;; TODO
+;;extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, int, int) -> int
+
+public lostanza defn libarchive_read_free (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_free(p.la-ptr)}
+
+public lostanza defn libarchive_read_new () -> ref<LIBARCHIVE> :
+  return new LIBARCHIVE{call-c archive_read_new()}
+
+;; TODO
+;;extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> int
+
+;; FIXME: is size_t an "int"?
+;; TODO
+;;extern archive_read_open_filename : (ptr<LIBARCHIVE>, ptr<String>, int) -> int
+
+public lostanza defn libarchive_read_support_compression_gzip (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_support_compression_gzip(p.la-ptr)}
+
+public lostanza defn libarchive_read_support_format_tar (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_support_format_tar(p.la-ptr)}
+
+public lostanza defn libarchive_write_close (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_write_close(p.la-ptr)}
+
+;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
+;; TODO
+;;extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, int, int) -> int
+
+public lostanza defn libarchive_write_disk_new () -> ref<LIBARCHIVE> :
+  return new LIBARCHIVE{call-c archive_write_disk_new()}
+
+;; TODO
+;;extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, int) -> int
+
+public lostanza defn libarchive_write_finish_entry (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_write_finish_entry(p.la-ptr)}
+
+public lostanza defn libarchive_write_free (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_write_free(p.la-ptr)}
+
+public lostanza defn libarchive_write_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Int> :
+  return new Int{call-c archive_write_header(p.la-ptr, q.lae-ptr)}

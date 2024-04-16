@@ -4,14 +4,7 @@ pkg-cache: ".slm/pkg-cache"
 package libarchive defined-in "src/libarchive.stanza"
 packages libarchive/* defined-in "src/libarchive"
 
-;;; TODO
-;package libarchive requires :
-;  ccfiles: "src/libarchive.c"
-;  ccflags:
-;    on-platform:
-;      linux: ()
-;      os-x: ()
-;      windows: ()
+include "stanza-libarchive.proj"
 
 build main :
   inputs:

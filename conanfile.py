@@ -153,9 +153,10 @@ class ConanSlmPackage(ConanFile):
   # package(): Copies files from build folder to the package folder.
   def package(self):
     self.output.info("conanfile.py: package()")
+    outerlibname = self.name.removeprefix("slm-")
 
     copy2(os.path.join(self.source_folder, "slm.toml"), self.package_folder)
     #copy2(os.path.join(self.source_folder, "slm.lock"), self.package_folder)
-    copy2(os.path.join(self.source_folder, f"stanza-{self.name}-relative.proj"), os.path.join(self.package_folder, f"stanza-{self.name}.proj"))
+    copy2(os.path.join(self.source_folder, f"stanza-{outerlibname}-relative.proj"), os.path.join(self.package_folder, f"stanza-{outerlibname}.proj"))
     copy2(os.path.join(self.source_folder, "stanza.proj"), os.path.join(self.package_folder, "stanza.proj"))
     copytree(os.path.join(self.source_folder, "src"), os.path.join(self.package_folder, "src"))

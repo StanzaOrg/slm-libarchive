@@ -1,0 +1,9 @@
+
+#use-added-syntax(tests)
+defpackage libarchive/tests :
+  import core
+
+  import libarchive
+
+deftest test-placeholder :
+  #EXPECT(true)
