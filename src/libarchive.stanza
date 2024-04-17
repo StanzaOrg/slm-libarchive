@@ -6,12 +6,10 @@ defpackage libarchive :
 ;================= C Externs ==================
 ;==============================================
 ;; struct archive;
-;; FIXME does this need  "<: Resource" ?
 lostanza deftype LIBARCHIVE :
   la-ptr: ptr<?>
 
 ;; struct archive_entry;
-;; FIXME does this need  "<: Resource" ?
 lostanza deftype LIBARCHIVE_ENTRY :
   lae-ptr: ptr<?>
 
@@ -19,61 +17,55 @@ lostanza deftype LIBARCHIVE_ENTRY :
 extern archive_error_string : (ptr<LIBARCHIVE>) -> ptr<byte>
 
 ;; Int archive_read_close(struct archive *);
-extern archive_read_close : (ptr<LIBARCHIVE>) -> int
+extern archive_read_close : (ptr<LIBARCHIVE>) -> long
 
-;; int archive_read_data_block(struct archive *a,
-;;           const void **buff, size_t *size, la_int64_t *offset);
-;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
-extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, int, int) -> int
+;; int archive_read_data_block(struct archive *a, const void **buff, size_t *size, la_int64_t *offset);
+extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, ptr<long>, ptr<long>) -> long
 
 ;; int archive_read_free(struct archive *);
-extern archive_read_free : (ptr<LIBARCHIVE>) -> int
+extern archive_read_free : (ptr<LIBARCHIVE>) -> long
 
 ;; struct archive *archive_read_new(void);
 extern archive_read_new : () -> ptr<LIBARCHIVE>
 
 ;; int archive_read_next_header(struct archive *, struct archive_entry **);
-extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> int
+extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> long
 
-;; int archive_read_open_filename(struct archive *,
-;;            const char *_filename, size_t _block_size);
-;; FIXME: is size_t an "int"?
-extern archive_read_open_filename : (ptr<LIBARCHIVE>, ptr<byte>, int) -> int
+;; int archive_read_open_filename(struct archive *, const char *_filename, size_t _block_size);
+extern archive_read_open_filename : (ptr<LIBARCHIVE>, ptr<byte>, long) -> long
 
 ;; int archive_read_support_compression_gzip(struct archive *);
-extern archive_read_support_compression_gzip : (ptr<LIBARCHIVE>) -> int
+extern archive_read_support_compression_gzip : (ptr<LIBARCHIVE>) -> long
 
 ;; int archive_read_support_format_tar(struct archive *);
-extern archive_read_support_format_tar : (ptr<LIBARCHIVE>) -> int
+extern archive_read_support_format_tar : (ptr<LIBARCHIVE>) -> long
 
 ;; int archive_write_close(struct archive *);
-extern archive_write_close : (ptr<LIBARCHIVE>) -> int
+extern archive_write_close : (ptr<LIBARCHIVE>) -> long
 
-;; la_ssize_t archive_write_data_block(struct archive *,
-;;                       const void *, size_t, la_int64_t);
-;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
-extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, int, int) -> int
+;; la_ssize_t archive_write_data_block(struct archive *, const void *, size_t, la_int64_t);
+extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, long, long) -> long
 
 ;; struct archive *archive_write_disk_new(void);
 extern archive_write_disk_new : () -> ptr<LIBARCHIVE>
 
 ;; int archive_write_disk_set_options(struct archive *, int flags);
-extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, int) -> int
+extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, long) -> long
 
 ;; int archive_write_finish_entry(struct archive *);
-extern archive_write_finish_entry : (ptr<LIBARCHIVE>) -> int
+extern archive_write_finish_entry : (ptr<LIBARCHIVE>) -> long
 
 ;; int archive_write_free(struct archive *);
-extern archive_write_free : (ptr<LIBARCHIVE>) -> int
+extern archive_write_free : (ptr<LIBARCHIVE>) -> long
 
 ;; int archive_write_header(struct archive *, struct archive_entry *);
-extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> int
+extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> long
 
+;; const char *archive_entry_pathname(struct archive_entry *);
+extern archive_entry_pathname : (ptr<LIBARCHIVE_ENTRY>) -> ptr<byte>
 
 ;Constants
 #for (V in [ARCHIVE_VERSION_NUMBER
-            ARCHIVE_VERSION_ONLY_STRING
-            ARCHIVE_VERSION_STRING
             ARCHIVE_EOF
             ARCHIVE_OK
             ARCHIVE_RETRY
@@ -81,8 +73,6 @@ extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> int
             ARCHIVE_FAILED
             ARCHIVE_FATAL]
       get_V in [get_ARCHIVE_VERSION_NUMBER
-            get_ARCHIVE_VERSION_ONLY_STRING
-            get_ARCHIVE_VERSION_STRING
             get_ARCHIVE_EOF
             get_ARCHIVE_OK
             get_ARCHIVE_RETRY
@@ -92,6 +82,14 @@ extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> int
             ]):
   extern get_V: () -> long
   public lostanza val V:ref<Long> = new Long{call-c get_V()}
+#for (V in [ARCHIVE_VERSION_ONLY_STRING
+            ARCHIVE_VERSION_STRING]
+      get_V in [get_ARCHIVE_VERSION_ONLY_STRING
+            get_ARCHIVE_VERSION_STRING
+            ]):
+  extern get_V: () -> ptr<byte>
+  public lostanza val V:ref<String> = String(call-c get_V())
+
 
 ;============================================================
 ;======================= Wrappers ===========================
@@ -99,50 +97,147 @@ extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> int
 public lostanza defn libarchive_error_string (p:ref<LIBARCHIVE>) -> ref<String> :
   return String(call-c archive_error_string(p.la-ptr))
 
-public lostanza defn libarchive_read_close (p:ref<LIBARCHIVE>) -> ref<Int> :
-  return new Int{call-c archive_read_close(p.la-ptr)}
+public lostanza defn libarchive_read_close (p:ref<LIBARCHIVE>) -> ref<Long> :
+  return new Long{call-c archive_read_close(p.la-ptr)}
 
-;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
 ;; TODO
-;;extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, int, int) -> int
+;;extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, ptr<long>, ptr<long>) -> long
+public lostanza defn libarchive_read_data_block (p:ref<LIBARCHIVE>, pbuf:ptr<ptr<?>>, psize:ptr<long>, poffset:ptr<long>) -> ref<Long> :
+  var xbuf:ptr<?>
+  var xs:long
+  var xo:long
+  val rtn:long = call-c archive_read_data_block(p.la-ptr, addr(xbuf), addr(xs), addr(xo))
+  return new Long{0}
+  ;return new Long{call-c archive_read_data_block(p.la-ptr, pbuf, psize, poffset)}
 
-public lostanza defn libarchive_read_free (p:ref<LIBARCHIVE>) -> ref<Int> :
-  return new Int{call-c archive_read_free(p.la-ptr)}
+public lostanza defn libarchive_read_free (p:ref<LIBARCHIVE>) -> ref<Long> :
+  return new Long{call-c archive_read_free(p.la-ptr)}
 
 public lostanza defn libarchive_read_new () -> ref<LIBARCHIVE> :
   return new LIBARCHIVE{call-c archive_read_new()}
 
+;;extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> long
+public lostanza defn libarchive_read_next_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Long> :
+  return new Long{call-c archive_read_next_header(p.la-ptr, addr!(q.lae-ptr))}
+
+public lostanza defn libarchive_read_open_filename (p:ref<LIBARCHIVE>, f:ref<String>, bs:ref<Long>) -> ref<Long> :
+  return new Long{call-c archive_read_open_filename(p.la-ptr, addr!(f.chars), bs.value)}
+
+public lostanza defn libarchive_read_support_compression_gzip (p:ref<LIBARCHIVE>) -> ref<Long> :
+  return new Long{call-c archive_read_support_compression_gzip(p.la-ptr)}
+
+public lostanza defn libarchive_read_support_format_tar (p:ref<LIBARCHIVE>) -> ref<Long> :
+  return new Long{call-c archive_read_support_format_tar(p.la-ptr)}
+
+public lostanza defn libarchive_write_close (p:ref<LIBARCHIVE>) -> ref<Long> :
+  return new Long{call-c archive_write_close(p.la-ptr)}
+
 ;; TODO
-;;extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> int
-
-;; FIXME: is size_t an "int"?
-;; TODO
-;;extern archive_read_open_filename : (ptr<LIBARCHIVE>, ptr<String>, int) -> int
-
-public lostanza defn libarchive_read_support_compression_gzip (p:ref<LIBARCHIVE>) -> ref<Int> :
-  return new Int{call-c archive_read_support_compression_gzip(p.la-ptr)}
-
-public lostanza defn libarchive_read_support_format_tar (p:ref<LIBARCHIVE>) -> ref<Int> :
-  return new Int{call-c archive_read_support_format_tar(p.la-ptr)}
-
-public lostanza defn libarchive_write_close (p:ref<LIBARCHIVE>) -> ref<Int> :
-  return new Int{call-c archive_write_close(p.la-ptr)}
-
-;; FIXME: is size_t an "int"?  is la_int64_t an "int"?
-;; TODO
-;;extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, int, int) -> int
-
+;;extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, long, long) -> long
 public lostanza defn libarchive_write_disk_new () -> ref<LIBARCHIVE> :
   return new LIBARCHIVE{call-c archive_write_disk_new()}
 
 ;; TODO
-;;extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, int) -> int
+;;extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, long) -> long
 
-public lostanza defn libarchive_write_finish_entry (p:ref<LIBARCHIVE>) -> ref<Int> :
-  return new Int{call-c archive_write_finish_entry(p.la-ptr)}
+public lostanza defn libarchive_write_finish_entry (p:ref<LIBARCHIVE>) -> ref<Long> :
+  return new Long{call-c archive_write_finish_entry(p.la-ptr)}
 
-public lostanza defn libarchive_write_free (p:ref<LIBARCHIVE>) -> ref<Int> :
-  return new Int{call-c archive_write_free(p.la-ptr)}
+public lostanza defn libarchive_write_free (p:ref<LIBARCHIVE>) -> ref<Long> :
+  return new Long{call-c archive_write_free(p.la-ptr)}
 
-public lostanza defn libarchive_write_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Int> :
-  return new Int{call-c archive_write_header(p.la-ptr, q.lae-ptr)}
+public lostanza defn libarchive_write_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Long> :
+  return new Long{call-c archive_write_header(p.la-ptr, q.lae-ptr)}
+
+public lostanza defn libarchive_entry_new () -> ref<LIBARCHIVE_ENTRY> :
+  return new LIBARCHIVE_ENTRY{null}
+
+public lostanza defn libarchive_entry_pathname (e:ref<LIBARCHIVE_ENTRY>) -> ref<String> :
+  return String(call-c archive_entry_pathname(e.lae-ptr))
+
+;============================================================
+;================ High Level Functions ======================
+;============================================================
+public defn untar (filename:String, targetdir:String, -- verbose:True|False = false, dryrun:True|False = false) -> Long :
+  val a = libarchive_read_new()
+  val out = libarchive_write_disk_new()
+  try:
+    if verbose:
+      println(STANDARD-ERROR-STREAM, "untar: ARCHIVE_VERSION_STRING = %_" % [ARCHIVE_VERSION_STRING])
+    var r = ARCHIVE_OK
+    
+    ;libarchive_write_disk_set_options(out, flags);
+
+    ;libarchive_write_disk_set_standard_lookup()
+    
+    r = libarchive_read_support_compression_gzip(a)
+    if r != ARCHIVE_OK :
+      throw(Exception("libarchive_read_support_compression_gzip returned %_: %_" % [r, libarchive_error_string(a)]))
+      
+    r = libarchive_read_support_format_tar(a)
+    if r != ARCHIVE_OK :
+      throw(Exception("libarchive_read_support_format_tar returned %_: %_" % [r, libarchive_error_string(a)]))
+
+    r = libarchive_read_open_filename(a, filename, 10240L)
+    if r != ARCHIVE_OK :
+      throw(Exception("libarchive_read_open_filename returned %_: %_" % [r, libarchive_error_string(a)]))
+
+    label<False> break :
+      var entry = libarchive_entry_new()
+      while true :
+        r = libarchive_read_next_header(a, entry);
+        if r == ARCHIVE_EOF :
+          break(false)
+        if r != ARCHIVE_OK :
+          throw(Exception("libarchive_read_next_header returned %_: %_" % [r, libarchive_error_string(a)]))
+        if verbose and not dryrun :
+          print(STANDARD-ERROR-STREAM, "x ");
+        if verbose and dryrun :
+          print(STANDARD-ERROR-STREAM, "%_" % [libarchive_entry_pathname(entry)])
+        if not dryrun :
+          r = libarchive_write_header(out, entry)
+          if r != ARCHIVE_OK :
+            throw(Exception("libarchive_write_header returned %_: %_" % [r, libarchive_error_string(out)]))
+          else :
+            ;r = copy_data(a, out)
+            if r != ARCHIVE_OK :
+              throw(Exception("copy_data returned %_: %_" % [r, libarchive_error_string(out)]))
+            r = libarchive_write_finish_entry(out)
+            if r != ARCHIVE_OK :
+              throw(Exception("libarchive_write_finish_entry returned %_: %_" % [r, libarchive_error_string(out)]))
+        if verbose and dryrun :
+          print(STANDARD-ERROR-STREAM, "\n")
+    ARCHIVE_OK
+   
+  finally:
+    libarchive_read_close(a)
+    libarchive_read_free(a)
+
+    libarchive_write_close(out)
+    libarchive_write_free(out)
+
+
+lostanza defn copy_data (ar:ref<LIBARCHIVE>, aw:ref<LIBARCHIVE>) -> ref<Long> :
+  var r:ref<Long> = new Long{0L}
+  ;var buf:ptr<ptr<?>>
+  ;var size:long = 0L
+  ;var offset:long = 0L
+  val current-err:ptr<?> = call-c clib/get_stderr()
+
+  call-c clib/fprintf(current-err, "untar: copy_data: begin\n")
+  ;call-c clib/fprintf(current-err, "untar: copy_data: start buf %d size %d offset %d\n", buf, size, offset)
+  call-c clib/fflush(current-err)
+;   ;while 1L :
+  ;r = libarchive_read_data_block(ar, buf, addr(size), addr(offset))
+;   call-c clib/fprintf(current-err, "untar: copy_data: got buf %d size %d offset %d\n", buf, size, offset)
+;   call-c clib/fflush(current-err)
+  return ARCHIVE_OK
+;   ; if r == ARCHIVE_EOF :
+;   ;   return new Long{ARCHIVE_OK}
+;   ; if r != ARCHIVE_OK :
+;   ;   return new Long{r}
+;   ; r = libarchive_write_data_block(aw, buf, size, offset);
+;   ; if (r != ARCHIVE_OK) {
+;   ;   throw(Exception("libarchive_write_data_block returned %_: %_" % [r, libarchive_error_string(aw)]))
+
+;   return ARCHIVE_OK
