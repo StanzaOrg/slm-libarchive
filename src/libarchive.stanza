@@ -16,32 +16,32 @@ lostanza deftype LIBARCHIVE_ENTRY :
 ;; const char *archive_error_string(struct archive *);
 extern archive_error_string : (ptr<LIBARCHIVE>) -> ptr<byte>
 
-;; Int archive_read_close(struct archive *);
-extern archive_read_close : (ptr<LIBARCHIVE>) -> long
+;; int archive_read_close(struct archive *);
+extern archive_read_close : (ptr<LIBARCHIVE>) -> int
 
 ;; int archive_read_data_block(struct archive *a, const void **buff, size_t *size, la_int64_t *offset);
-extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, ptr<long>, ptr<long>) -> long
+extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, ptr<long>, ptr<long>) -> int
 
 ;; int archive_read_free(struct archive *);
-extern archive_read_free : (ptr<LIBARCHIVE>) -> long
+extern archive_read_free : (ptr<LIBARCHIVE>) -> int
 
 ;; struct archive *archive_read_new(void);
 extern archive_read_new : () -> ptr<LIBARCHIVE>
 
 ;; int archive_read_next_header(struct archive *, struct archive_entry **);
-extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> long
+extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> int
 
 ;; int archive_read_open_filename(struct archive *, const char *_filename, size_t _block_size);
-extern archive_read_open_filename : (ptr<LIBARCHIVE>, ptr<byte>, long) -> long
+extern archive_read_open_filename : (ptr<LIBARCHIVE>, ptr<byte>, long) -> int
 
 ;; int archive_read_support_compression_gzip(struct archive *);
-extern archive_read_support_compression_gzip : (ptr<LIBARCHIVE>) -> long
+extern archive_read_support_compression_gzip : (ptr<LIBARCHIVE>) -> int
 
 ;; int archive_read_support_format_tar(struct archive *);
-extern archive_read_support_format_tar : (ptr<LIBARCHIVE>) -> long
+extern archive_read_support_format_tar : (ptr<LIBARCHIVE>) -> int
 
 ;; int archive_write_close(struct archive *);
-extern archive_write_close : (ptr<LIBARCHIVE>) -> long
+extern archive_write_close : (ptr<LIBARCHIVE>) -> int
 
 ;; la_ssize_t archive_write_data_block(struct archive *, const void *, size_t, la_int64_t);
 extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, long, long) -> long
@@ -50,19 +50,28 @@ extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, long, long) -> long
 extern archive_write_disk_new : () -> ptr<LIBARCHIVE>
 
 ;; int archive_write_disk_set_options(struct archive *, int flags);
-extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, long) -> long
+extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, long) -> int
 
 ;; int archive_write_finish_entry(struct archive *);
-extern archive_write_finish_entry : (ptr<LIBARCHIVE>) -> long
+extern archive_write_finish_entry : (ptr<LIBARCHIVE>) -> int
 
 ;; int archive_write_free(struct archive *);
-extern archive_write_free : (ptr<LIBARCHIVE>) -> long
+extern archive_write_free : (ptr<LIBARCHIVE>) -> int
 
 ;; int archive_write_header(struct archive *, struct archive_entry *);
-extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> long
+extern archive_write_header : (ptr<LIBARCHIVE>, ptr<LIBARCHIVE_ENTRY>) -> int
 
 ;; const char *archive_entry_pathname(struct archive_entry *);
 extern archive_entry_pathname : (ptr<LIBARCHIVE_ENTRY>) -> ptr<byte>
+
+;; const char *archive_entry_hardlink(struct archive_entry *)
+extern archive_entry_hardlink : (ptr<LIBARCHIVE_ENTRY>) -> ptr<byte>
+
+;; void  archive_entry_set_pathname(struct archive_entry *, const char *);
+extern archive_entry_set_pathname : (ptr<LIBARCHIVE_ENTRY>, ptr<byte>) -> int
+
+;; void  archive_entry_set_hardlink(struct archive_entry *, const char *);
+extern archive_entry_set_hardlink : (ptr<LIBARCHIVE_ENTRY>, ptr<byte>) -> int
 
 ;Constants
 #for (V in [ARCHIVE_VERSION_NUMBER
@@ -118,8 +127,8 @@ extern archive_entry_pathname : (ptr<LIBARCHIVE_ENTRY>) -> ptr<byte>
             get_ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
             get_ARCHIVE_EXTRACT_SAFE_WRITES
             ]):
-  extern get_V: () -> long
-  public lostanza val V:ref<Long> = new Long{call-c get_V()}
+  extern get_V: () -> int
+  public lostanza val V:ref<Int> = new Int{call-c get_V()}
 #for (V in [ARCHIVE_VERSION_ONLY_STRING
             ARCHIVE_VERSION_STRING]
       get_V in [get_ARCHIVE_VERSION_ONLY_STRING
@@ -132,93 +141,143 @@ extern archive_entry_pathname : (ptr<LIBARCHIVE_ENTRY>) -> ptr<byte>
 ;============================================================
 ;======================= Wrappers ===========================
 ;============================================================
-public lostanza defn libarchive_error_string (p:ref<LIBARCHIVE>) -> ref<String> :
-  return String(call-c archive_error_string(p.la-ptr))
+public lostanza defn libarchive_error_string (p:ref<LIBARCHIVE>) -> ref<String|False> :
+  val pb:ptr<byte> = call-c archive_error_string(p.la-ptr)
+  if pb == null :
+    return false
+  else :
+    return String(pb)
 
-public lostanza defn libarchive_read_close (p:ref<LIBARCHIVE>) -> ref<Long> :
-  return new Long{call-c archive_read_close(p.la-ptr)}
+public lostanza defn libarchive_read_close (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_close(p.la-ptr)}
 
-;; TODO
-;;extern archive_read_data_block : (ptr<LIBARCHIVE>, ptr<ptr<?>>, ptr<long>, ptr<long>) -> long
-public lostanza defn libarchive_read_data_block (p:ref<LIBARCHIVE>, pbuf:ptr<ptr<?>>, psize:ptr<long>, poffset:ptr<long>) -> ref<Long> :
-  var xbuf:ptr<?>
-  var xs:long
-  var xo:long
-  val rtn:long = call-c archive_read_data_block(p.la-ptr, addr(xbuf), addr(xs), addr(xo))
-  return new Long{0}
-  ;return new Long{call-c archive_read_data_block(p.la-ptr, pbuf, psize, poffset)}
+public lostanza defn libarchive_read_data_block (p:ref<LIBARCHIVE>, pbuf:ptr<ptr<?>>, psize:ptr<long>, poffset:ptr<long>) -> ref<Int> :
+  return new Int{call-c archive_read_data_block(p.la-ptr, pbuf, psize, poffset)}
 
-public lostanza defn libarchive_read_free (p:ref<LIBARCHIVE>) -> ref<Long> :
-  return new Long{call-c archive_read_free(p.la-ptr)}
+public lostanza defn libarchive_read_free (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_free(p.la-ptr)}
 
 public lostanza defn libarchive_read_new () -> ref<LIBARCHIVE> :
   return new LIBARCHIVE{call-c archive_read_new()}
 
-;;extern archive_read_next_header : (ptr<LIBARCHIVE>, ptr<ptr<LIBARCHIVE_ENTRY>>) -> long
-public lostanza defn libarchive_read_next_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Long> :
-  return new Long{call-c archive_read_next_header(p.la-ptr, addr!(q.lae-ptr))}
+public lostanza defn libarchive_read_next_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Int> :
+  return new Int{call-c archive_read_next_header(p.la-ptr, addr!(q.lae-ptr))}
 
-public lostanza defn libarchive_read_open_filename (p:ref<LIBARCHIVE>, f:ref<String>, bs:ref<Long>) -> ref<Long> :
-  return new Long{call-c archive_read_open_filename(p.la-ptr, addr!(f.chars), bs.value)}
+public lostanza defn libarchive_read_open_filename (p:ref<LIBARCHIVE>, f:ref<String>, bs:ref<Long>) -> ref<Int> :
+  return new Int{call-c archive_read_open_filename(p.la-ptr, addr!(f.chars), bs.value)}
 
-public lostanza defn libarchive_read_support_compression_gzip (p:ref<LIBARCHIVE>) -> ref<Long> :
-  return new Long{call-c archive_read_support_compression_gzip(p.la-ptr)}
+public lostanza defn libarchive_read_support_compression_gzip (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_support_compression_gzip(p.la-ptr)}
 
-public lostanza defn libarchive_read_support_format_tar (p:ref<LIBARCHIVE>) -> ref<Long> :
-  return new Long{call-c archive_read_support_format_tar(p.la-ptr)}
+public lostanza defn libarchive_read_support_format_tar (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_read_support_format_tar(p.la-ptr)}
 
-public lostanza defn libarchive_write_close (p:ref<LIBARCHIVE>) -> ref<Long> :
-  return new Long{call-c archive_write_close(p.la-ptr)}
+public lostanza defn libarchive_write_close (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_write_close(p.la-ptr)}
 
-;; TODO
-;;extern archive_write_data_block : (ptr<LIBARCHIVE>, ptr<?>, long, long) -> long
+public lostanza defn libarchive_write_data_block (p:ref<LIBARCHIVE>, buf:ptr<?>, size:long, offset:long) -> ref<Long> :
+  return new Long{call-c archive_write_data_block(p.la-ptr, buf, size, offset)}
+
 public lostanza defn libarchive_write_disk_new () -> ref<LIBARCHIVE> :
   return new LIBARCHIVE{call-c archive_write_disk_new()}
 
-;; TODO
-;;extern archive_write_disk_set_options : (ptr<LIBARCHIVE>, long) -> long
+public lostanza defn libarchive_write_disk_set_options (p:ref<LIBARCHIVE>, flags:ref<Int>) -> ref<Int> :
+  return new Int{call-c archive_write_disk_set_options(p.la-ptr, flags.value)}
 
-public lostanza defn libarchive_write_finish_entry (p:ref<LIBARCHIVE>) -> ref<Long> :
-  return new Long{call-c archive_write_finish_entry(p.la-ptr)}
+public lostanza defn libarchive_write_finish_entry (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_write_finish_entry(p.la-ptr)}
 
-public lostanza defn libarchive_write_free (p:ref<LIBARCHIVE>) -> ref<Long> :
-  return new Long{call-c archive_write_free(p.la-ptr)}
+public lostanza defn libarchive_write_free (p:ref<LIBARCHIVE>) -> ref<Int> :
+  return new Int{call-c archive_write_free(p.la-ptr)}
 
-public lostanza defn libarchive_write_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Long> :
-  return new Long{call-c archive_write_header(p.la-ptr, q.lae-ptr)}
+public lostanza defn libarchive_write_header (p:ref<LIBARCHIVE>, q:ref<LIBARCHIVE_ENTRY>) -> ref<Int> :
+  return new Int{call-c archive_write_header(p.la-ptr, q.lae-ptr)}
 
 public lostanza defn libarchive_entry_new () -> ref<LIBARCHIVE_ENTRY> :
   return new LIBARCHIVE_ENTRY{null}
 
-public lostanza defn libarchive_entry_pathname (e:ref<LIBARCHIVE_ENTRY>) -> ref<String> :
-  return String(call-c archive_entry_pathname(e.lae-ptr))
+public lostanza defn libarchive_entry_pathname (e:ref<LIBARCHIVE_ENTRY>) -> ref<String|False> :
+  val pb:ptr<byte> = call-c archive_entry_pathname(e.lae-ptr)
+  if pb == null :
+    return false
+  else :
+    return String(pb)
+
+public lostanza defn libarchive_entry_hardlink (e:ref<LIBARCHIVE_ENTRY>) -> ref<String|False> :
+  val pb:ptr<byte> = call-c archive_entry_hardlink(e.lae-ptr)
+  if pb == null :
+    return false
+  else :
+    return String(pb)
+
+;;extern archive_entry_set_pathname : (ptr<LIBARCHIVE_ENTRY>, ptr<byte>) -> int
+public lostanza defn libarchive_entry_set_pathname (e:ref<LIBARCHIVE_ENTRY>, s:ref<String>) -> ref<False> :
+  call-c archive_entry_set_pathname(e.lae-ptr, addr!(s.chars))
+  return false
+
+;;extern archive_entry_set_hardlink : (ptr<LIBARCHIVE_ENTRY>, ptr<byte>) -> int
+public lostanza defn libarchive_entry_set_hardlink (e:ref<LIBARCHIVE_ENTRY>, s:ref<String>) -> ref<False> :
+  call-c archive_entry_set_hardlink(e.lae-ptr, addr!(s.chars))
+  return false
+
 
 ;============================================================
 ;================ High Level Functions ======================
 ;============================================================
-public defn untar (filename:String, targetdir:String, -- verbose:True|False = false, dryrun:True|False = false) -> Long :
+defn errstr (i:Int) -> String :
+  switch {i == _} :
+    ARCHIVE_EOF    : "ARCHIVE_EOF"
+    ARCHIVE_OK     : "ARCHIVE_OK"
+    ARCHIVE_RETRY  : "ARCHIVE_RETRY"
+    ARCHIVE_WARN   : "ARCHIVE_WARN"
+    ARCHIVE_FAILED : "ARCHIVE_FAILED"
+    ARCHIVE_FATAL  : "ARCHIVE_FATAL"
+    else : to-string(i)
+
+
+defn prepend-directory (dir:String, e:LIBARCHIVE_ENTRY) -> False :
+  if dir != "" and dir != "." :
+    match(libarchive_entry_pathname(e)) :
+      (x:String) :
+        var sep:String = "/"
+        if x[0] == '/':
+          sep = ""
+        libarchive_entry_set_pathname(e, to-string("%_%_%_" % [dir, sep, x]))
+      (_) : false
+
+    match(libarchive_entry_hardlink(e)) :
+      (x:String) :
+        var sep:String = "/"
+        if x[0] == '/':
+          sep = ""
+        libarchive_entry_set_hardlink(e, to-string("%_%_%_" % [dir, sep, x]))
+      (_) : false
+  false
+
+public defn untar (filename:String, targetdir:String, -- verbose:True|False = false, dryrun:True|False = false) -> Int :
   val a = libarchive_read_new()
   val out = libarchive_write_disk_new()
   try:
     if verbose:
       println(STANDARD-ERROR-STREAM, "untar: ARCHIVE_VERSION_STRING = %_" % [ARCHIVE_VERSION_STRING])
     var r = ARCHIVE_OK
-    
-    ;libarchive_write_disk_set_options(out, flags);
 
-    ;libarchive_write_disk_set_standard_lookup()
-    
+    val flags = ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_PERM | ARCHIVE_EXTRACT_ACL | ARCHIVE_EXTRACT_FFLAGS
+    r = libarchive_write_disk_set_options(out, flags);
+    if r != ARCHIVE_OK :
+      throw(Exception("libarchive_write_disk_set_options returned %_: %_" % [errstr(r), libarchive_error_string(a)]))
+
     r = libarchive_read_support_compression_gzip(a)
     if r != ARCHIVE_OK :
-      throw(Exception("libarchive_read_support_compression_gzip returned %_: %_" % [r, libarchive_error_string(a)]))
-      
+      throw(Exception("libarchive_read_support_compression_gzip returned %_: %_" % [errstr(r), libarchive_error_string(a)]))
+
     r = libarchive_read_support_format_tar(a)
     if r != ARCHIVE_OK :
-      throw(Exception("libarchive_read_support_format_tar returned %_: %_" % [r, libarchive_error_string(a)]))
+      throw(Exception("libarchive_read_support_format_tar returned %_: %_" % [errstr(r), libarchive_error_string(a)]))
 
     r = libarchive_read_open_filename(a, filename, 10240L)
     if r != ARCHIVE_OK :
-      throw(Exception("libarchive_read_open_filename returned %_: %_" % [r, libarchive_error_string(a)]))
+      throw(Exception("libarchive_read_open_filename returned %_: %_" % [errstr(r), libarchive_error_string(a)]))
 
     label<False> break :
       var entry = libarchive_entry_new()
@@ -227,26 +286,29 @@ public defn untar (filename:String, targetdir:String, -- verbose:True|False = fa
         if r == ARCHIVE_EOF :
           break(false)
         if r != ARCHIVE_OK :
-          throw(Exception("libarchive_read_next_header returned %_: %_" % [r, libarchive_error_string(a)]))
+          throw(Exception("libarchive_read_next_header returned %_: %_" % [errstr(r), libarchive_error_string(a)]))
         if verbose and not dryrun :
           print(STANDARD-ERROR-STREAM, "x ");
         if verbose and dryrun :
           print(STANDARD-ERROR-STREAM, "%_" % [libarchive_entry_pathname(entry)])
         if not dryrun :
+          ;; update the entry filename by prepending targetdir
+          prepend-directory(targetdir, entry)
           r = libarchive_write_header(out, entry)
           if r != ARCHIVE_OK :
-            throw(Exception("libarchive_write_header returned %_: %_" % [r, libarchive_error_string(out)]))
+            throw(Exception("libarchive_write_header returned %_: %_" % [errstr(r), libarchive_error_string(out)]))
           else :
-            ;r = copy_data(a, out)
+            r = copy_data(a, out)
             if r != ARCHIVE_OK :
-              throw(Exception("copy_data returned %_: %_" % [r, libarchive_error_string(out)]))
+              throw(Exception("copy_data returned %_: %_" % [errstr(r), libarchive_error_string(out)]))
             r = libarchive_write_finish_entry(out)
             if r != ARCHIVE_OK :
-              throw(Exception("libarchive_write_finish_entry returned %_: %_" % [r, libarchive_error_string(out)]))
+              throw(Exception("libarchive_write_finish_entry returned %_: %_" % [errstr(r), libarchive_error_string(out)]))
         if verbose and dryrun :
           print(STANDARD-ERROR-STREAM, "\n")
+
     ARCHIVE_OK
-   
+
   finally:
     libarchive_read_close(a)
     libarchive_read_free(a)
@@ -255,27 +317,30 @@ public defn untar (filename:String, targetdir:String, -- verbose:True|False = fa
     libarchive_write_free(out)
 
 
-lostanza defn copy_data (ar:ref<LIBARCHIVE>, aw:ref<LIBARCHIVE>) -> ref<Long> :
-  var r:ref<Long> = new Long{0L}
-  ;var buf:ptr<ptr<?>>
-  ;var size:long = 0L
-  ;var offset:long = 0L
-  val current-err:ptr<?> = call-c clib/get_stderr()
+lostanza defn copy_data (ar:ref<LIBARCHIVE>, aw:ref<LIBARCHIVE>) -> ref<Int> :
+  var r:ref<Int> = new Int{0}
+  val pbuf:ptr<ptr<?>> = call-c clib/malloc(sizeof(ptr<?>))
+  val psize:ptr<long> = call-c clib/malloc(sizeof(long))
+  val poffset:ptr<long> = call-c clib/malloc(sizeof(long))
+  ;val current-err:ptr<?> = call-c clib/get_stderr()
 
-  call-c clib/fprintf(current-err, "untar: copy_data: begin\n")
-  ;call-c clib/fprintf(current-err, "untar: copy_data: start buf %d size %d offset %d\n", buf, size, offset)
-  call-c clib/fflush(current-err)
-;   ;while 1L :
-  ;r = libarchive_read_data_block(ar, buf, addr(size), addr(offset))
-;   call-c clib/fprintf(current-err, "untar: copy_data: got buf %d size %d offset %d\n", buf, size, offset)
-;   call-c clib/fflush(current-err)
-  return ARCHIVE_OK
-;   ; if r == ARCHIVE_EOF :
-;   ;   return new Long{ARCHIVE_OK}
-;   ; if r != ARCHIVE_OK :
-;   ;   return new Long{r}
-;   ; r = libarchive_write_data_block(aw, buf, size, offset);
-;   ; if (r != ARCHIVE_OK) {
-;   ;   throw(Exception("libarchive_write_data_block returned %_: %_" % [r, libarchive_error_string(aw)]))
-
-;   return ARCHIVE_OK
+  ;call-c clib/fprintf(current-err, "untar: copy_data: begin\n")
+  var finished:int = 0
+  while finished == 0 :
+    r = libarchive_read_data_block(ar, pbuf, psize, poffset)
+    ;call-c clib/fprintf(current-err, "untar: copy_data: got result %d buf %p size %d offset %d\n", r.value, pbuf, [psize], [poffset])
+    ;call-c clib/fflush(current-err)
+    if r.value == ARCHIVE_EOF.value :
+      r = ARCHIVE_OK
+      finished = 1
+    else :
+      if r.value != ARCHIVE_OK.value :
+        finished = 1
+      else :
+        val rr:ref<Long> = libarchive_write_data_block(aw, [pbuf], [psize], [poffset]);
+        if (rr.value != ARCHIVE_OK.value) :
+          finished = 1
+  call-c clib/free(pbuf)
+  call-c clib/free(psize)
+  call-c clib/free(poffset)
+  return r
