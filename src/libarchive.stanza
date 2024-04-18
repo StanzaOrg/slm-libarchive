@@ -71,7 +71,26 @@ extern archive_entry_pathname : (ptr<LIBARCHIVE_ENTRY>) -> ptr<byte>
             ARCHIVE_RETRY
             ARCHIVE_WARN
             ARCHIVE_FAILED
-            ARCHIVE_FATAL]
+            ARCHIVE_FATAL
+            ARCHIVE_EXTRACT_OWNER
+            ARCHIVE_EXTRACT_PERM
+            ARCHIVE_EXTRACT_TIME
+            ARCHIVE_EXTRACT_NO_OVERWRITE
+            ARCHIVE_EXTRACT_UNLINK
+            ARCHIVE_EXTRACT_ACL
+            ARCHIVE_EXTRACT_FFLAGS
+            ARCHIVE_EXTRACT_XATTR
+            ARCHIVE_EXTRACT_SECURE_SYMLINKS
+            ARCHIVE_EXTRACT_SECURE_NODOTDOT
+            ARCHIVE_EXTRACT_NO_AUTODIR
+            ARCHIVE_EXTRACT_NO_OVERWRITE_NEWER
+            ARCHIVE_EXTRACT_SPARSE
+            ARCHIVE_EXTRACT_MAC_METADATA
+            ARCHIVE_EXTRACT_NO_HFS_COMPRESSION
+            ARCHIVE_EXTRACT_HFS_COMPRESSION_FORCED
+            ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS
+            ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
+            ARCHIVE_EXTRACT_SAFE_WRITES]
       get_V in [get_ARCHIVE_VERSION_NUMBER
             get_ARCHIVE_EOF
             get_ARCHIVE_OK
@@ -79,6 +98,25 @@ extern archive_entry_pathname : (ptr<LIBARCHIVE_ENTRY>) -> ptr<byte>
             get_ARCHIVE_WARN
             get_ARCHIVE_FAILED
             get_ARCHIVE_FATAL
+            get_ARCHIVE_EXTRACT_OWNER
+            get_ARCHIVE_EXTRACT_PERM
+            get_ARCHIVE_EXTRACT_TIME
+            get_ARCHIVE_EXTRACT_NO_OVERWRITE
+            get_ARCHIVE_EXTRACT_UNLINK
+            get_ARCHIVE_EXTRACT_ACL
+            get_ARCHIVE_EXTRACT_FFLAGS
+            get_ARCHIVE_EXTRACT_XATTR
+            get_ARCHIVE_EXTRACT_SECURE_SYMLINKS
+            get_ARCHIVE_EXTRACT_SECURE_NODOTDOT
+            get_ARCHIVE_EXTRACT_NO_AUTODIR
+            get_ARCHIVE_EXTRACT_NO_OVERWRITE_NEWER
+            get_ARCHIVE_EXTRACT_SPARSE
+            get_ARCHIVE_EXTRACT_MAC_METADATA
+            get_ARCHIVE_EXTRACT_NO_HFS_COMPRESSION
+            get_ARCHIVE_EXTRACT_HFS_COMPRESSION_FORCED
+            get_ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS
+            get_ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
+            get_ARCHIVE_EXTRACT_SAFE_WRITES
             ]):
   extern get_V: () -> long
   public lostanza val V:ref<Long> = new Long{call-c get_V()}
