@@ -1,6 +1,6 @@
 
 name = "slm-libarchive"
-version = "0.0.5"
+version = "0.1.0"
 
 [dependencies]
 
@@ -8,7 +8,7 @@ version = "0.0.5"
 pkg="libarchive"
 version="3.7.3"
 type="conan"
-options.shared = "False"
+options.shared = "True"
 options.with_acl = "True"
 options.with_bzip2 = "False"
 options.with_cng = "False"
