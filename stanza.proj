@@ -17,4 +17,4 @@ build-test test :
   inputs:
     libarchive/tests
   pkg: ".slm/test-pkgs"
-  o: "libarchive_tests"
+  o: "libarchive-test"
