@@ -1,0 +1,17 @@
+
+; These compile instructions are for binary package build time.
+; End-user slm packages will not have this include file.
+
+; compile libarchive.c into a shared library
+compile flag "-lstz-libarchive" :
+  on-platform :
+    linux :
+      "mkdir -p '{.}/lib'"
+      "cc -fPIC -rdynamic -shared -DPLATFORM_LINUX '-I{STANZA_CONFIG}/include' '{.}/src/libarchive.c' -o '{.}/lib/libstz-libarchive.so'"
+    os-x :
+      "mkdir -p '{.}/lib'"
+      "cc -fPIC -rdynamic -shared -DPLATFORM_OS_X '-I{STANZA_CONFIG}/include' '{.}/src/libarchive.c' -o '{.}/lib/libstz-libarchive.dylib'"
+    windows :
+      "mkdir {.}\\lib"
+      "gcc -Wl,--export-all-symbols -shared -DPLATFORM_WINDOWS '-I{STANZA_CONFIG}/include' '{.}/src/libarchive.c' -o '{.}/lib/libstz-libarchive.dll'"
+

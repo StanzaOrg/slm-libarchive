@@ -6,6 +6,10 @@ packages libarchive/* defined-in "src/libarchive"
 
 include "stanza-libarchive.proj"
 
+; This include file will only exist in the git repo at binary package build time.
+; End-user slm packages will not have this include file.
+include? "stanza-library.proj"
+
 build main :
   inputs:
     libarchive
